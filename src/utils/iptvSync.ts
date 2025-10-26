@@ -2,6 +2,13 @@
 import { ContentItem } from "../types/content";
 import { loadSettings, saveSettings } from "./settings";
 import { clearCache } from "./dataLoader";
+import { parseM3U, isValidM3U } from "./m3uParser";
+import {
+  saveIPTVData as saveToStorage,
+  clearIPTVData as clearStorage,
+  loadIPTVData as loadFromStorage,
+  getIPTVStorageInfo
+} from "./iptvStorage";
 
 export interface SyncResult {
   success: boolean;
@@ -10,39 +17,47 @@ export interface SyncResult {
 }
 
 /**
- * Fetches and converts IPTV M3U data using Electron's file caching system
+ * Fetches and converts IPTV M3U data - Works on Web, Electron, and Capacitor
  */
 export async function syncIPTVData(url: string, onProgress?: (message: string) => void): Promise<SyncResult> {
-  if (!window.electron?.isElectron) {
-    return {
-      success: false,
-      message: "IPTV sync is only available in Electron app",
-    };
-  }
-
   try {
-    // Set up progress listener
-    let cleanupProgress: (() => void) | null = null;
-    if (onProgress) {
-      cleanupProgress = window.electron.iptv.onProgress(onProgress);
-    }
-
     onProgress?.("Starting IPTV sync...");
 
-    // Download M3U and convert to JSON, store in cache
-    const result = await window.electron.iptv.downloadAndConvert(url);
+    // Step 1: Download M3U file using fetch (works everywhere)
+    onProgress?.("Downloading M3U file...");
+    const response = await fetch(url);
 
-    // Cleanup progress listener
-    if (cleanupProgress) {
-      cleanupProgress();
-    }
-
-    if (!result.success) {
+    if (!response.ok) {
       return {
         success: false,
-        message: result.error || "Failed to download and convert M3U file",
+        message: `Failed to download M3U: ${response.status} ${response.statusText}`,
       };
     }
+
+    const m3uContent = await response.text();
+
+    // Step 2: Validate M3U format
+    if (!isValidM3U(m3uContent)) {
+      return {
+        success: false,
+        message: "Invalid M3U file format",
+      };
+    }
+
+    // Step 3: Parse M3U to JSON
+    onProgress?.("Converting M3U to JSON...");
+    const contentItems = parseM3U(m3uContent);
+
+    if (contentItems.length === 0) {
+      return {
+        success: false,
+        message: "No valid entries found in M3U file",
+      };
+    }
+
+    // Step 4: Save to IndexedDB
+    onProgress?.("Saving to storage...");
+    await saveToStorage(contentItems, url, m3uContent);
 
     // Update last sync time
     const settings = loadSettings();
@@ -52,12 +67,12 @@ export async function syncIPTVData(url: string, onProgress?: (message: string) =
     // Clear the data cache so new content appears immediately
     clearCache();
 
-    onProgress?.(`Completed! Found ${result.itemCount} items`);
+    onProgress?.(`Completed! Found ${contentItems.length} items`);
 
     return {
       success: true,
       message: "IPTV data synced successfully",
-      itemCount: result.itemCount,
+      itemCount: contentItems.length,
     };
   } catch (error) {
     return {
@@ -68,36 +83,20 @@ export async function syncIPTVData(url: string, onProgress?: (message: string) =
 }
 
 /**
- * Loads IPTV data from Electron cache
+ * Loads IPTV data from storage
  */
 export function loadIPTVData(): ContentItem[] | null {
-  // Note: This is now a synchronous function that returns null if not in Electron
-  // The actual data loading is handled asynchronously in dataLoader.ts
-  if (!window.electron?.isElectron) {
-    console.warn("IPTV data loading is only available in Electron app");
-    return null;
-  }
-
-  // Return null here - the actual loading is async and handled by loadIPTVDataAsync
+  // Note: This is a synchronous stub - actual loading is async
+  // The actual data loading is handled asynchronously in loadIPTVDataAsync
   return null;
 }
 
 /**
- * Async version to load IPTV data from Electron cache
+ * Async version to load IPTV data from storage (IndexedDB)
  */
 export async function loadIPTVDataAsync(): Promise<ContentItem[] | null> {
-  if (!window.electron?.isElectron) {
-    return null;
-  }
-
   try {
-    const result = await window.electron.iptv.loadCache();
-
-    if (!result.success || !result.data) {
-      return null;
-    }
-
-    return result.data as ContentItem[];
+    return await loadFromStorage();
   } catch (error) {
     console.error("Failed to load IPTV cache:", error);
     return null;
@@ -108,12 +107,8 @@ export async function loadIPTVDataAsync(): Promise<ContentItem[] | null> {
  * Clears IPTV cache
  */
 export async function clearIPTVData(): Promise<void> {
-  if (!window.electron?.isElectron) {
-    return;
-  }
-
   try {
-    await window.electron.iptv.clearCache();
+    await clearStorage();
   } catch (error) {
     console.error("Failed to clear IPTV cache:", error);
   }
@@ -123,16 +118,26 @@ export async function clearIPTVData(): Promise<void> {
  * Gets IPTV cache information
  */
 export async function getIPTVCacheInfo() {
-  if (!window.electron?.isElectron) {
-    return null;
-  }
-
   try {
-    const result = await window.electron.iptv.getCacheInfo();
-    return result;
+    const info = await getIPTVStorageInfo();
+
+    return {
+      success: true,
+      exists: info.exists,
+      itemCount: info.metadata?.itemCount,
+      storageSize: info.metadata?.storageSize,
+      driver: info.driver,
+      driverName: info.driverName,
+      lastModified: info.metadata?.lastModified,
+      lastSync: info.lastSync,
+    };
   } catch (error) {
     console.error("Failed to get IPTV cache info:", error);
-    return null;
+    return {
+      success: false,
+      exists: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }
 

@@ -30,6 +30,23 @@ export interface IPTVLoadResult {
   error?: string;
 }
 
+export interface FileDownloadProgress {
+  downloadId?: string;
+  status: 'downloading' | 'paused' | 'complete' | 'canceled' | 'error';
+  totalSize?: number;
+  downloadedSize?: number;
+  percentage?: number;
+  message: string;
+}
+
+export interface FileDownloadResult {
+  success: boolean;
+  canceled?: boolean;
+  filePath?: string;
+  size?: number;
+  error?: string;
+}
+
 export interface ElectronAPI {
   platform: string;
   isElectron: boolean;
@@ -49,6 +66,14 @@ export interface ElectronAPI {
     clearCache: () => Promise<{ success: boolean; error?: string }>;
     getCacheInfo: () => Promise<IPTVCacheInfo>;
     onProgress: (callback: (message: string) => void) => () => void;
+  };
+  file: {
+    download: (url: string, filename: string) => Promise<FileDownloadResult>;
+    pause: (downloadId: string) => Promise<{ success: boolean; error?: string }>;
+    resume: (downloadId: string) => Promise<{ success: boolean; error?: string }>;
+    cancel: (downloadId: string) => Promise<{ success: boolean; error?: string }>;
+    onDownloadProgress: (callback: (progress: FileDownloadProgress) => void) => () => void;
+    onDownloadStarted: (callback: (data: { downloadId: string }) => void) => () => void;
   };
 }
 
