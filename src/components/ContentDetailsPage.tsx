@@ -379,6 +379,16 @@ export function ContentDetailsPage({
                   )}
                 </div>
 
+                <div className="text-sm text-white/60">
+                    Download directly: <a
+                        href={item.url}
+                        download
+                        className="underline hover:text-white"
+                    >
+                        {item.url}
+                    </a>
+                </div>
+
                 {/* Overview */}
                 {tmdbInfo && tmdbInfo.details.overview && (
                   <p className="text-lg leading-relaxed text-white/80">{tmdbInfo.details.overview}</p>
