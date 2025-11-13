@@ -47,7 +47,7 @@ export function ContentRow({ title, children, rowId, onConfigure, dragHandleProp
   }, []);
 
   return (
-    <div className="group/row relative px-12">
+    <div className="group/row relative">
       <div className="mb-4 flex items-center gap-3">
         <h2 className="text-xl md:text-2xl">{title}</h2>
         
@@ -82,10 +82,11 @@ export function ContentRow({ title, children, rowId, onConfigure, dragHandleProp
         <Button
           variant="ghost"
           size="icon"
-          className="absolute left-0 top-1/2 z-20 h-[225px] md:h-[240px] lg:h-[255px] w-12 -translate-y-1/2 rounded-none bg-black/60 opacity-0 transition-opacity hover:bg-black/80 group-hover/row:opacity-100"
+          className="absolute left-0 top-12 mt-1 z-20 h-[170px] md:h-[240px] lg:h-[270px] w-12 rounded-none
+           bg-black/50 opacity-0 transition-opacity hover:bg-black/80 group-hover/row:opacity-100"
           onClick={() => scroll("left")}
         >
-          <ChevronLeft className="h-8 w-8" />
+          <ChevronLeft className="h-12 w-12" />
         </Button>
       )}
 
@@ -93,7 +94,7 @@ export function ContentRow({ title, children, rowId, onConfigure, dragHandleProp
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex gap-2 overflow-x-scroll scrollbar-hide md:gap-3"
+        className="flex gap-2 overflow-x-scroll scrollbar-hide md:gap-3 p-1"
         style={{
           scrollbarWidth: "none",
           msOverflowStyle: "none",
@@ -108,10 +109,11 @@ export function ContentRow({ title, children, rowId, onConfigure, dragHandleProp
         <Button
           variant="ghost"
           size="icon"
-          className="absolute right-0 top-1/2 z-20 h-[225px] md:h-[240px] lg:h-[255px] w-12 -translate-y-1/2 rounded-none bg-black/60 opacity-0 transition-opacity hover:bg-black/80 group-hover/row:opacity-100"
+          className="absolute right-0 top-12 mt-1 z-20 h-[170px] md:h-[240px] lg:h-[270px] w-12 rounded-none
+           bg-black/50 opacity-0 transition-opacity hover:bg-black/80 group-hover/row:opacity-100"
           onClick={() => scroll("right")}
         >
-          <ChevronRight className="h-8 w-8" />
+          <ChevronRight className="h-12 w-12" />
         </Button>
       )}
     </div>

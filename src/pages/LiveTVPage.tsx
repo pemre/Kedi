@@ -50,18 +50,14 @@ export function LiveTVPage({
       {backgroundItem && (
         <HeroSection
           title=""
-          description=""
           imageUrl={backgroundItem.logo}
-          category=""
           item={backgroundItem}
-          onPlay={onPlay}
         />
       )}
       
       {/* Main Content with Sidebar */}
-      <div className="relative z-10 mt-32 flex gap-6 px-12 pb-12">
-        {/* Left Sidebar - Filters */}
-        <div className="w-64 shrink-0">
+      <div className="relative z-10 mt-18 md:mt-32 px-6 md:px-12 pb-12">
+        <div className="flex gap-6">
           <FilterSidebar
             filters={liveTVFilters}
             onFilterChange={onFilterChange}
@@ -80,20 +76,20 @@ export function LiveTVPage({
             onLetterChange={onLetterChange}
             alphabetCounts={liveTVAlphabetCounts}
           />
-        </div>
-        
-        {/* Right Content Area */}
-        <div className="min-w-0 flex-1">
-          <LiveTVPaginatedContent 
-            items={filteredTVChannels} 
-            pageSize={24}
-            onPlay={onPlay}
-            onItemHover={onItemHover}
-            onToggleMyList={onToggleMyList}
-            isItemInMyList={isItemInMyList}
-            searchTerm={liveTVSearchTerm}
-            selectedLetter={liveTVSelectedLetter}
-          />
+
+          {/* Right Content Area */}
+          <div className="min-w-0 flex-1">
+            <LiveTVPaginatedContent
+              items={filteredTVChannels}
+              pageSize={24}
+              onPlay={onPlay}
+              onItemHover={onItemHover}
+              onToggleMyList={onToggleMyList}
+              isItemInMyList={isItemInMyList}
+              searchTerm={liveTVSearchTerm}
+              selectedLetter={liveTVSelectedLetter}
+            />
+          </div>
         </div>
       </div>
     </>

@@ -84,7 +84,7 @@ export function PaginatedContent({ items, pageSize = 20, onPlay, onItemHover, on
   return (
     <div className="space-y-8">
       {/* Content Grid */}
-      <div className="grid gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+      <div className="grid gap-4 grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
         {paginatedItems.map((item) => {
           if (item.type === "TV") {
             return <TVChannelCard key={item.id} item={item} onPlay={onPlay} onHover={onItemHover} onToggleMyList={onToggleMyList} isInMyList={isItemInMyList?.(item.url) || false} />;
@@ -146,7 +146,7 @@ export function PaginatedContent({ items, pageSize = 20, onPlay, onItemHover, on
 
       {/* Results info */}
       <div className="text-center text-sm text-white/50">
-        Showing {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, items.length)} of {items.length} results
+        {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, items.length)} / {items.length}
       </div>
     </div>
   );

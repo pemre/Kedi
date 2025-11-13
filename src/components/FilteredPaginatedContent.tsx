@@ -244,7 +244,7 @@ export function FilteredPaginatedContent({
       {totalPages > 1 && (
         <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <div className="text-sm text-white/50">
-            Showing {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, filteredItems.length)} of {filteredItems.length} results
+              {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, filteredItems.length)} / {filteredItems.length}
           </div>
           <PaginationControls />
         </div>
@@ -258,7 +258,7 @@ export function FilteredPaginatedContent({
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+        <div className="grid gap-4 grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {paginatedItems.map((item) => {
             if (item.type === "TV") {
               return <TVChannelCard key={item.id} item={item} onPlay={onPlay} onHover={onItemHover} onToggleMyList={onToggleMyList} isInMyList={isItemInMyList?.(item.url) || false} />;

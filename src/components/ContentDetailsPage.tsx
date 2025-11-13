@@ -212,7 +212,7 @@ export function ContentDetailsPage({
       )}
 
       {/* Main Content */}
-      <div className="relative z-10 px-12 pb-12 pt-32">
+      <div className="relative z-10 px-6 md:px-12 pb-6 md:pb-12 pt-18 md:pt-32">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#E50914] border-t-transparent"></div>
@@ -223,11 +223,11 @@ export function ContentDetailsPage({
             <div className="grid gap-8 lg:grid-cols-[350px_1fr]">
               {/* Poster */}
               {posterPath && (
-                <div className="flex justify-center lg:justify-start">
+                <div className="flex justify-center">
                   <img
                     src={getTmdbImageUrl(posterPath, "w500") || ""}
                     alt={title}
-                    className="h-auto w-full max-w-[350px] rounded-lg shadow-2xl"
+                    className="w-1/2 md:w-full max-w-[350px] rounded-lg shadow-2xl"
                   />
                 </div>
               )}
@@ -307,7 +307,6 @@ export function ContentDetailsPage({
                     className="border-white/20 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
                   >
                     <ArrowLeft className="h-5 w-5" />
-                    Back
                   </Button>
 
                   {/* Play Button - Series: Latest Episode, Movie: Play Movie */}

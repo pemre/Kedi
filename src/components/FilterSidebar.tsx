@@ -7,8 +7,8 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Input } from "./ui/input";
-import { X, Search } from "lucide-react";
-import { useMemo } from "react";
+import { X, Search, SlidersHorizontal } from "lucide-react";
+import { useMemo, useState } from "react";
 import { filters as filtersData } from "../data/filtersData";
 import { sortStringsTurkish } from "../utils/turkishSort";
 
@@ -47,7 +47,9 @@ export function FilterSidebar({
   onLetterChange,
   alphabetCounts = {}
 }: FilterSidebarProps) {
-  const hasActiveFilters = Object.values(filters).some((value) => value !== "all") || 
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const hasActiveFilters = Object.values(filters).some((value) => value !== "all") ||
                           searchTerm !== "" || 
                           selectedLetter !== null;
   
@@ -174,27 +176,38 @@ export function FilterSidebar({
   };
 
   return (
-    <div className="sticky top-24 h-fit space-y-6 rounded-lg border border-white/10 p-6 backdrop-blur-md">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Filters</h3>
-        {hasActiveFilters && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleClearAll}
-            className="h-6 gap-1 text-xs text-muted-foreground hover:text-foreground"
-          >
-            <X className="h-3 w-3" />
-            Clear All
-          </Button>
-        )}
-      </div>
+    <>
+      {/* Mobile Filter Button - Bottom Left */}
+      <Button
+        onClick={() => setIsMobileOpen(true)}
+        className={`
+          fixed bottom-6 right-6 z-40 rounded-full p-0 shadow-lg text-white backdrop-blur-xs
+          h-10 w-10 border-white/20 border-1 bg-white/10 hover:bg-white/20 lg:hidden
+          ${isMobileOpen ? 'bg-[#E50914]' : ''}
+        `}
+      >
+        <SlidersHorizontal className="h-6 w-6" />
+      </Button>
 
-      <div className="space-y-4">
-        {/* Search Filter */}
-        {enabledFilters.search && onSearchChange && (
-          <div>
-            <label className="mb-2 block text-sm text-white/70">Search</label>
+      {/* Backdrop Overlay for Mobile */}
+      {isMobileOpen && (
+        <div
+            className="fixed inset-0 z-40 lg:hidden"
+            onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Mobile: fixed overlay, Desktop: static in layout */}
+      <div
+        className={`
+          fixed left-6 bottom-6 z-50 w-64 md:w-80 space-y-6 overflow-y-auto rounded-lg border border-white/10 bg-black/50 p-6 transition-transform duration-300 ease-in-out shadow-2xl
+          lg:static lg:top-0 lg:left-0 lg:bottom-0 lg:h-fit lg:w-64 lg:shrink-0 lg:bg-black/50 backdrop-blur-xs
+          ${isMobileOpen ? 'translate-x-0' : '-translate-x-[110%] lg:translate-x-0'}
+        `}
+      >
+        <div className="space-y-4">
+          {/* Search Filter */}
+          {enabledFilters.search && onSearchChange && (
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" />
               <Input
@@ -205,140 +218,122 @@ export function FilterSidebar({
                 className="border-white/20 bg-transparent pl-10 text-white placeholder:text-white/40 backdrop-blur-sm hover:bg-white/5 focus:bg-white/5"
               />
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Alphabet Filter */}
-        {enabledFilters.alphabet && onLetterChange && (
-          <div>
-            <label className="mb-2 block text-sm text-white/70">First Letter</label>
-            <div className="flex flex-wrap gap-1.5">
-              {alphabet.map((letter) => {
-                const count = alphabetCounts[letter] || 0;
-                const isSelected = selectedLetter === letter;
-                
-                return (
-                  <Button
-                    key={letter}
-                    variant={isSelected ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => onLetterChange(isSelected ? null : letter)}
-                    disabled={count === 0}
-                    className={
-                      isSelected
-                        ? `h-7 ${letter === "0-9" ? "w-10 text-xs" : "w-7 text-xs"} bg-[#E50914] hover:bg-[#E50914]/90`
-                        : `h-7 ${letter === "0-9" ? "w-10 text-xs" : "w-7 text-xs"} border-white/20 bg-white/5 hover:bg-white/10 disabled:opacity-20`
-                    }
-                    title={`${count} items`}
-                  >
-                    {letter}
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-        
-        {/* Category Filter */}
-        {enabledFilters.category && getCategoryOptions.length > 0 && (
-          <div>
-            <label className="mb-2 block text-sm text-white/70">Category</label>
-            <Select value={filters.category} onValueChange={(value) => onFilterChange("category", value)}>
-              <SelectTrigger className="border-white/20 bg-transparent text-white backdrop-blur-sm hover:bg-white/10">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent className="border-white/20 bg-transparent text-white backdrop-blur-sm">
-                <SelectItem value="all">All Categories</SelectItem>
-                {getCategoryOptions.map((category) => (
-                  <SelectItem key={category} value={category.toLowerCase()}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+          {/* Alphabet Filter */}
+          {enabledFilters.alphabet && onLetterChange && (
+              <div className="flex flex-wrap gap-1.5">
+                {alphabet.map((letter) => {
+                  const count = alphabetCounts[letter] || 0;
+                  const isSelected = selectedLetter === letter;
 
-        {/* Platform Filter */}
-        {enabledFilters.platform && getPlatformOptions.length > 0 && (
-          <div>
-            <label className="mb-2 block text-sm text-white/70">Platform</label>
-            <Select value={filters.platform} onValueChange={(value) => onFilterChange("platform", value)}>
-              <SelectTrigger className="border-white/20 bg-transparent text-white backdrop-blur-sm hover:bg-white/10">
-                <SelectValue placeholder="Platform" />
-              </SelectTrigger>
-              <SelectContent className="border-white/20 bg-transparent text-white backdrop-blur-sm">
-                <SelectItem value="all">All Platforms</SelectItem>
-                {getPlatformOptions.map((platform) => (
-                  <SelectItem key={platform} value={platform.toLowerCase().replace(/\s+/g, '-')}>
-                    {platform}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+                  return (
+                    <Button
+                      key={letter}
+                      variant={isSelected ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => onLetterChange(isSelected ? null : letter)}
+                      disabled={count === 0}
+                      className={
+                        isSelected
+                          ? `h-7 ${letter === "0-9" ? "w-10 text-xs" : "w-7 text-xs"} bg-[#E50914] hover:bg-[#E50914]/90`
+                          : `h-7 ${letter === "0-9" ? "w-10 text-xs" : "w-7 text-xs"} border-white/20 bg-white/5 hover:bg-white/10 disabled:opacity-20`
+                      }
+                      title={`${count} items`}
+                    >
+                      {letter}
+                    </Button>
+                  );
+                })}
+              </div>
+          )}
 
-        {/* Quality Filter */}
-        {enabledFilters.quality && getQualityOptions.length > 0 && (
-          <div>
-            <label className="mb-2 block text-sm text-white/70">Quality</label>
-            <Select value={filters.quality} onValueChange={(value) => onFilterChange("quality", value)}>
-              <SelectTrigger className="border-white/20 bg-transparent text-white backdrop-blur-sm hover:bg-white/10">
-                <SelectValue placeholder="Quality" />
-              </SelectTrigger>
-              <SelectContent className="border-white/20 bg-transparent text-white backdrop-blur-sm">
-                <SelectItem value="all">All Quality</SelectItem>
-                {getQualityOptions.map((quality) => (
-                  <SelectItem key={quality} value={quality.toLowerCase()}>
-                    {quality.toUpperCase()}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+          {/* Category Filter */}
+          {enabledFilters.category && getCategoryOptions.length > 0 && (
+              <Select value={filters.category} onValueChange={(value) => onFilterChange("category", value)}>
+                <SelectTrigger className="border-white/20 bg-transparent text-white backdrop-blur-sm hover:bg-white/10">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent className="border-white/20 bg-transparent text-white backdrop-blur-sm">
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {getCategoryOptions.map((category) => (
+                    <SelectItem key={category} value={category.toLowerCase()}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+          )}
 
-        {/* Year Filter */}
-        {enabledFilters.year && getYearOptions.length > 0 && (
-          <div>
-            <label className="mb-2 block text-sm text-white/70">Year</label>
-            <Select value={filters.year} onValueChange={(value) => onFilterChange("year", value)}>
-              <SelectTrigger className="border-white/20 bg-transparent text-white backdrop-blur-sm hover:bg-white/10">
-                <SelectValue placeholder="Year" />
-              </SelectTrigger>
-              <SelectContent className="border-white/20 bg-transparent text-white backdrop-blur-sm">
-                <SelectItem value="all">All Years</SelectItem>
-                {getYearOptions.map((year) => (
-                  <SelectItem key={year} value={year}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+          {/* Platform Filter */}
+          {enabledFilters.platform && getPlatformOptions.length > 0 && (
+              <Select value={filters.platform} onValueChange={(value) => onFilterChange("platform", value)}>
+                <SelectTrigger className="border-white/20 bg-transparent text-white backdrop-blur-sm hover:bg-white/10">
+                  <SelectValue placeholder="Platform" />
+                </SelectTrigger>
+                <SelectContent className="border-white/20 bg-transparent text-white backdrop-blur-sm">
+                  <SelectItem value="all">All Platforms</SelectItem>
+                  {getPlatformOptions.map((platform) => (
+                    <SelectItem key={platform} value={platform.toLowerCase().replace(/\s+/g, '-')}>
+                      {platform}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+          )}
 
-        {/* Language Filter */}
-        {enabledFilters.language && getLanguageOptions.length > 0 && (
-          <div>
-            <label className="mb-2 block text-sm text-white/70">Language</label>
-            <Select value={filters.language} onValueChange={(value) => onFilterChange("language", value)}>
-              <SelectTrigger className="border-white/20 bg-transparent text-white backdrop-blur-sm hover:bg-white/10">
-                <SelectValue placeholder="Language" />
-              </SelectTrigger>
-              <SelectContent className="border-white/20 bg-transparent text-white backdrop-blur-sm">
-                <SelectItem value="all">All Languages</SelectItem>
-                {getLanguageOptions.map((lang) => (
-                  <SelectItem key={lang} value={lang.toLowerCase()}>
-                    {getLanguageDisplay(lang)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+          {/* Quality Filter */}
+          {enabledFilters.quality && getQualityOptions.length > 0 && (
+              <Select value={filters.quality} onValueChange={(value) => onFilterChange("quality", value)}>
+                <SelectTrigger className="border-white/20 bg-transparent text-white backdrop-blur-sm hover:bg-white/10">
+                  <SelectValue placeholder="Quality" />
+                </SelectTrigger>
+                <SelectContent className="border-white/20 bg-transparent text-white backdrop-blur-sm">
+                  <SelectItem value="all">All Quality</SelectItem>
+                  {getQualityOptions.map((quality) => (
+                    <SelectItem key={quality} value={quality.toLowerCase()}>
+                      {quality.toUpperCase()}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+          )}
+
+          {/* Year Filter */}
+          {enabledFilters.year && getYearOptions.length > 0 && (
+              <Select value={filters.year} onValueChange={(value) => onFilterChange("year", value)}>
+                <SelectTrigger className="border-white/20 bg-transparent text-white backdrop-blur-sm hover:bg-white/10">
+                  <SelectValue placeholder="Year" />
+                </SelectTrigger>
+                <SelectContent className="border-white/20 bg-transparent text-white backdrop-blur-sm">
+                  <SelectItem value="all">All Years</SelectItem>
+                  {getYearOptions.map((year) => (
+                    <SelectItem key={year} value={year}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+          )}
+
+          {/* Language Filter */}
+          {enabledFilters.language && getLanguageOptions.length > 0 && (
+              <Select value={filters.language} onValueChange={(value) => onFilterChange("language", value)}>
+                <SelectTrigger className="border-white/20 bg-transparent text-white backdrop-blur-sm hover:bg-white/10">
+                  <SelectValue placeholder="Language" />
+                </SelectTrigger>
+                <SelectContent className="border-white/20 bg-transparent text-white backdrop-blur-sm">
+                  <SelectItem value="all">All Languages</SelectItem>
+                  {getLanguageOptions.map((lang) => (
+                    <SelectItem key={lang} value={lang.toLowerCase()}>
+                      {getLanguageDisplay(lang)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

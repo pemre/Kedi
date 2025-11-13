@@ -8,7 +8,13 @@
  * - Season and episode details
  */
 
-const TMDB_BEARER_TOKEN = "YOUR_TMDB_BEARER_TOKEN";
+import { loadSettings } from "./settings";
+
+// TMDB Bearer Token (v4 API Read Access Token) - loaded from settings
+const getTMDBBearerToken = () => {
+  const settings = loadSettings();
+  return settings.tmdbBearerToken || "";
+};
 const CACHE_PREFIX_SERIES = "tmdb-series-";
 const CACHE_PREFIX_MOVIE = "tmdb-movie-";
 const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
@@ -107,21 +113,21 @@ async function fetchWithCache<T>(url: string, cacheKey: string, ttlMs: number = 
   
   console.log(`🌐 Fetching from TMDB: ${url}`);
   
-  const res = await fetch(url, {
+  const response = await fetch(url, {
     headers: {
-      'Authorization': `Bearer ${TMDB_BEARER_TOKEN}`,
+      'Authorization': `Bearer ${getTMDBBearerToken()}`,
       'accept': 'application/json'
     }
   });
   
-  if (!res.ok) {
-    const errorText = await res.text();
-    console.error(`TMDB API error (${res.status}):`, errorText);
-    throw new Error(`TMDB API error: ${res.status}`);
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`TMDB API error (${response.status}):`, errorText);
+    throw new Error(`TMDB API error: ${response.status}`);
   }
   
-  const data = await res.json();
-  
+  const data = await response.json();
+
   try {
     localStorage.setItem(cacheKey, JSON.stringify({ timestamp: now, data }));
     console.log(`💾 Cached data for: ${cacheKey}`);

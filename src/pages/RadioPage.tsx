@@ -23,7 +23,6 @@ interface RadioPageProps {
 }
 
 export function RadioPage({
-  radioStations,
   filteredRadioStations,
   radioFilters,
   radioSearchTerm,
@@ -62,28 +61,26 @@ export function RadioPage({
 
   return (
     <div className="min-h-screen px-12 pt-24 mt-8">
-      <div className="flex gap-6 pb-12">
-        {/* Left Sidebar - Filters */}
-        <div className="w-64 shrink-0">
-          <FilterSidebar
-            filters={radioFilters}
-            onFilterChange={onFilterChange}
-            onClearFilters={onClearFilters}
-            contentType="Radio"
-            enabledFilters={{
-              search: true,
-              alphabet: true,
-              category: true,
-              language: true
-            }}
-            searchTerm={radioSearchTerm}
-            onSearchChange={onSearchChange}
-            selectedLetter={radioSelectedLetter}
-            onLetterChange={onLetterChange}
-            alphabetCounts={radioAlphabetCounts}
-          />
-        </div>
+      {/* Mobile and Desktop Filters */}
+      <FilterSidebar
+        filters={radioFilters}
+        onFilterChange={onFilterChange}
+        onClearFilters={onClearFilters}
+        contentType="Radio"
+        enabledFilters={{
+          search: true,
+          alphabet: true,
+          category: true,
+          language: true
+        }}
+        searchTerm={radioSearchTerm}
+        onSearchChange={onSearchChange}
+        selectedLetter={radioSelectedLetter}
+        onLetterChange={onLetterChange}
+        alphabetCounts={radioAlphabetCounts}
+      />
 
+      <div className="flex gap-6 pb-12">
         {/* Right Content Area */}
         <div className="min-w-0 flex-1 space-y-8">
           {displayedStations.length === 0 ? (
@@ -91,16 +88,17 @@ export function RadioPage({
               <p className="text-lg text-white/50">No radio stations found</p>
             </div>
           ) : (
-            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-4 grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
               {displayedStations.map((item) => (
-                <RadioStation
-                  key={item.id}
-                  item={item}
-                  isPlaying={playingRadio === item.url}
-                  onPlay={() => onRadioPlay(item.url)}
-                  onToggleMyList={onToggleMyList}
-                  isInMyList={isItemInMyList(item.url)}
-                />
+                <div key={item.id}>
+                  <RadioStation
+                    item={item}
+                    isPlaying={playingRadio === item.url}
+                    onPlay={() => onRadioPlay(item.url)}
+                    onToggleMyList={onToggleMyList}
+                    isInMyList={isItemInMyList(item.url)}
+                  />
+                </div>
               ))}
             </div>
           )}

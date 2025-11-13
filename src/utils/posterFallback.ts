@@ -8,13 +8,36 @@
  * 4. Show "No Poster" placeholder
  * 
  * Result is cached for 15 days regardless of source (TMDB/logo/placeholder)
+ * Uses localForage (IndexedDB) for storage
  */
 
-// TMDB Bearer Token (v4 API Read Access Token)
-const TMDB_BEARER_TOKEN = "YOUR_TMDB_BEARER_TOKEN";
-const CACHE_NAME = "poster-cache-v1";
-const LS_PREFIX = "tmdb-cache-";
-const POSTER_RESULT_CACHE_PREFIX = "poster-result-";
+import { loadSettings } from "./settings";
+
+// Dynamic import of localforage to avoid module resolution issues
+let localforage: any;
+let posterStore: any;
+
+// Initialize localForage lazily
+async function getStore() {
+  if (!posterStore) {
+    if (!localforage) {
+      const module = await import('localforage');
+      localforage = (module as any).default || module;
+    }
+    posterStore = localforage.createInstance({
+      name: 'kedi-tv',
+      storeName: 'poster',
+      description: 'Poster and TMDB cache for Kedi TV'
+    });
+  }
+  return posterStore;
+}
+
+// TMDB Bearer Token (v4 API Read Access Token) - loaded from settings
+const getTMDBBearerToken = () => {
+  const settings = loadSettings();
+  return settings.tmdbBearerToken || "";
+};
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const FIFTEEN_DAYS = 15 * ONE_DAY;
 
@@ -52,16 +75,17 @@ export interface PosterResult {
 }
 
 /**
- * Fetch JSON with localStorage caching and Bearer token authentication
+ * Fetch JSON with IndexedDB caching and Bearer token authentication
  */
 async function getJsonCached(url: string, ttlMs: number = ONE_DAY): Promise<any> {
-  const lsKey = LS_PREFIX + url;
+  const store = await getStore();
+  const cacheKey = `tmdb-cache-${url}`;
   const now = Date.now();
   
   try {
-    const cached = localStorage.getItem(lsKey);
+    const cached = await store.getItem(cacheKey);
     if (cached) {
-      const { t, v } = JSON.parse(cached);
+      const { t, v } = cached;
       if (now - t < ttlMs) {
         return v;
       }
@@ -72,7 +96,7 @@ async function getJsonCached(url: string, ttlMs: number = ONE_DAY): Promise<any>
   
   const res = await fetch(url, {
     headers: {
-      'Authorization': `Bearer ${TMDB_BEARER_TOKEN}`,
+      'Authorization': `Bearer ${getTMDBBearerToken()}`,
       'accept': 'application/json'
     }
   });
@@ -86,9 +110,9 @@ async function getJsonCached(url: string, ttlMs: number = ONE_DAY): Promise<any>
   const data = await res.json();
   
   try {
-    localStorage.setItem(lsKey, JSON.stringify({ t: now, v: data }));
+    await store.setItem(cacheKey, { t: now, v: data });
   } catch (e) {
-    // localStorage might be full, continue without caching
+    // Storage might be full, continue without caching
   }
   
   return data;
@@ -142,21 +166,6 @@ async function getImagesFor(id: number, type: "tv" | "movie" = "tv"): Promise<Tm
   return getJsonCached(url, ONE_DAY);
 }
 
-/**
- * Fetch and cache image using Cache Storage API
- */
-async function cacheFetch(requestUrl: string): Promise<Response> {
-  const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(requestUrl);
-  
-  if (cached) return cached;
-  
-  const res = await fetch(requestUrl, { mode: "cors", cache: "no-store" });
-  if (!res.ok) throw new Error(`Image fetch failed: ${res.status}`);
-  
-  await cache.put(requestUrl, res.clone());
-  return res;
-}
 
 /**
  * Try to fetch poster from TMDB
@@ -192,9 +201,6 @@ async function tryTmdb(title: string, type: "tv" | "movie"): Promise<string | nu
     const cdnUrl = `${base}${size}${chosen.file_path}`;
     console.log(`🖼️ TMDB poster: ${cdnUrl} (${chosen.iso_639_1 || "no lang"})`);
     
-    // Cache the image
-    await cacheFetch(cdnUrl);
-    
     return cdnUrl;
   } catch (error) {
     console.error(`❌ TMDB fetch failed:`, error);
@@ -209,10 +215,9 @@ async function tryLogo(logoUrl: string): Promise<string | null> {
   try {
     console.log(`📷 Trying original logo URL`);
     
-    const res = await fetch(logoUrl, { method: 'HEAD', mode: 'no-cors' });
-    // With no-cors, we can't check status, so we'll just try to cache it
-    await cacheFetch(logoUrl);
-    
+    await fetch(logoUrl, { method: 'HEAD', mode: 'no-cors' });
+    // With no-cors, we can't check status, so we assume it works
+
     console.log(`✅ Logo URL works`);
     return logoUrl;
   } catch (error) {
@@ -236,26 +241,27 @@ function getPosterCacheKey(originalUrl: string, title: string, type: "tv" | "mov
   }
   // Convert to base36 for a shorter, URL-safe string
   const hashStr = Math.abs(hash).toString(36);
-  return `${POSTER_RESULT_CACHE_PREFIX}${hashStr}-${type}`;
+  return `poster-result-${hashStr}-${type}`;
 }
 
 /**
  * Get cached poster result
  */
-function getCachedPosterResult(originalUrl: string, title: string, type: "tv" | "movie"): PosterResult | null {
+async function getCachedPosterResult(originalUrl: string, title: string, type: "tv" | "movie"): Promise<PosterResult | null> {
   const cacheKey = getPosterCacheKey(originalUrl, title, type);
   
   try {
-    const cached = localStorage.getItem(cacheKey);
+    const store = await getStore();
+    const cached = await store.getItem(cacheKey);
     if (cached) {
-      const { t, result } = JSON.parse(cached);
+      const { t, result } = cached;
       const now = Date.now();
       
       if (now - t < FIFTEEN_DAYS) {
         console.log(`✨ Using cached result (${result.source}) for "${title}"`);
         return result;
       } else {
-        localStorage.removeItem(cacheKey);
+        await store.removeItem(cacheKey);
       }
     }
   } catch (e) {
@@ -268,17 +274,18 @@ function getCachedPosterResult(originalUrl: string, title: string, type: "tv" | 
 /**
  * Save poster result to cache
  */
-function savePosterResultToCache(
-  originalUrl: string, 
+async function savePosterResultToCache(
+  originalUrl: string,
   title: string, 
   type: "tv" | "movie", 
   result: PosterResult
-): void {
+): Promise<void> {
   const cacheKey = getPosterCacheKey(originalUrl, title, type);
   const now = Date.now();
   
   try {
-    localStorage.setItem(cacheKey, JSON.stringify({ t: now, result }));
+    const store = await getStore();
+    await store.setItem(cacheKey, { t: now, result });
     console.log(`💾 Cached poster result (${result.source}) for "${title}" (15 days)`);
   } catch (e) {
     console.error("Error saving poster cache:", e);
@@ -289,7 +296,8 @@ function savePosterResultToCache(
  * Check if TMDB API is configured
  */
 export function isTmdbConfigured(): boolean {
-  return TMDB_BEARER_TOKEN !== "YOUR_TMDB_BEARER_TOKEN";
+  const token = getTMDBBearerToken();
+  return token !== "" && token !== "YOUR_TMDB_BEARER_TOKEN";
 }
 
 /**
@@ -304,7 +312,7 @@ export async function getPosterUrl(
   type: "tv" | "movie"
 ): Promise<PosterResult> {
   // 1. Check cache first
-  const cached = getCachedPosterResult(originalUrl, title, type);
+  const cached = await getCachedPosterResult(originalUrl, title, type);
   if (cached) {
     return cached;
   }
@@ -320,7 +328,7 @@ export async function getPosterUrl(
         source: "tmdb",
         meta: { size: "w500" }
       };
-      savePosterResultToCache(originalUrl, title, type, result);
+      await savePosterResultToCache(originalUrl, title, type, result);
       return result;
     }
   } else {
@@ -334,7 +342,7 @@ export async function getPosterUrl(
       url: logoUrl,
       source: "logo"
     };
-    savePosterResultToCache(originalUrl, title, type, result);
+    await savePosterResultToCache(originalUrl, title, type, result);
     return result;
   }
 
@@ -343,6 +351,6 @@ export async function getPosterUrl(
     url: "",
     source: "placeholder"
   };
-  savePosterResultToCache(originalUrl, title, type, result);
+  await savePosterResultToCache(originalUrl, title, type, result);
   return result;
 }

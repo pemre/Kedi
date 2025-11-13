@@ -3,7 +3,6 @@ import { FilterSidebar } from "../components/FilterSidebar";
 import { FilteredPaginatedContent } from "../components/FilteredPaginatedContent";
 import { ContentDetailsPage } from "../components/ContentDetailsPage";
 import { ContentItem } from "../types/content";
-import { GroupedSeries } from "../utils/seriesGrouping";
 
 interface MoviesPageProps {
   allMovies: ContentItem[];
@@ -85,9 +84,8 @@ export function MoviesPage({
       )}
       
       {/* Main Content with Sidebar */}
-      <div className="relative z-10 mt-32 flex gap-6 px-12 pb-12">
-        {/* Left Sidebar - Filters */}
-        <div className="w-64 shrink-0">
+      <div className="relative z-10 mt-18 md:mt-32 px-6 md:px-12 pb-12">
+        <div className="flex gap-6">
           <FilterSidebar
             filters={movieFilters}
             onFilterChange={onFilterChange}
@@ -108,21 +106,21 @@ export function MoviesPage({
             onLetterChange={onLetterChange}
             alphabetCounts={movieAlphabetCounts}
           />
-        </div>
-        
-        {/* Right Content Area */}
-        <div className="min-w-0 flex-1">
-          <FilteredPaginatedContent 
-            items={filteredMovies} 
-            pageSize={24}
-            onPlay={onPlay}
-            onItemHover={onItemHover}
-            onToggleMyList={onToggleMyList}
-            isItemInMyList={isItemInMyList}
-            onContentClick={handleContentClick}
-            searchTerm={movieSearchTerm}
-            selectedLetter={movieSelectedLetter}
-          />
+
+          {/* Right Content Area */}
+          <div className="min-w-0 flex-1">
+            <FilteredPaginatedContent
+              items={filteredMovies}
+              pageSize={24}
+              onPlay={onPlay}
+              onItemHover={onItemHover}
+              onToggleMyList={onToggleMyList}
+              isItemInMyList={isItemInMyList}
+              onContentClick={handleContentClick}
+              searchTerm={movieSearchTerm}
+              selectedLetter={movieSelectedLetter}
+            />
+          </div>
         </div>
       </div>
     </>

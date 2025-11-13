@@ -92,9 +92,8 @@ export function SeriesPage({
       )}
       
       {/* Main Content with Sidebar */}
-      <div className="relative z-10 mt-32 flex gap-6 px-12 pb-12">
-        {/* Left Sidebar - Filters */}
-        <div className="w-64 shrink-0">
+      <div className="relative z-10 mt-18 md:mt-32 px-6 md:px-12 pb-12">
+        <div className="flex gap-6">
           <FilterSidebar
             filters={seriesFilters}
             onFilterChange={onFilterChange}
@@ -115,21 +114,21 @@ export function SeriesPage({
             onLetterChange={onLetterChange}
             alphabetCounts={seriesAlphabetCounts}
           />
-        </div>
-        
-        {/* Right Content Area */}
-        <div className="min-w-0 flex-1">
-          <FilteredPaginatedContent 
-            items={filteredSeries} 
-            pageSize={24}
-            onPlay={onPlay}
-            onItemHover={onItemHover}
-            onToggleMyList={onToggleMyList}
-            isItemInMyList={isItemInMyList}
-            onContentClick={handleContentClick}
-            searchTerm={seriesSearchTerm}
-            selectedLetter={seriesSelectedLetter}
-          />
+
+          {/* Right Content Area */}
+          <div className="min-w-0 flex-1">
+            <FilteredPaginatedContent
+              items={filteredSeries}
+              pageSize={24}
+              onPlay={onPlay}
+              onItemHover={onItemHover}
+              onToggleMyList={onToggleMyList}
+              isItemInMyList={isItemInMyList}
+              onContentClick={handleContentClick}
+              searchTerm={seriesSearchTerm}
+              selectedLetter={seriesSelectedLetter}
+            />
+          </div>
         </div>
       </div>
     </>

@@ -6,7 +6,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Switch } from "../components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { X, Check, GripVertical, ChevronLeft, RotateCcw, RefreshCw, Calendar, Play, HardDrive, FolderOpen } from "lucide-react";
+import { X, Check, GripVertical, ChevronLeft, RotateCcw, RefreshCw, Calendar, Play, HardDrive } from "lucide-react";
 import { toast } from "sonner";
 import { syncIPTVData, getIPTVCacheInfo } from "../utils/iptvSync";
 import { syncPlexData } from "../utils/plexSync";
@@ -57,11 +57,11 @@ export function SettingsPage({ onClose, onSettingsChange, onContentReload }: Set
   const [iptvCacheInfo, setIptvCacheInfo] = useState<{
     exists: boolean;
     itemCount?: number;
-    jsonCacheSize?: number;
-    m3uCacheSize?: number;
-    jsonCachePath?: string;
-    m3uCachePath?: string;
+    storageSize?: number;
+    driver?: string;
+    driverName?: string;
     lastModified?: string;
+    lastSync?: string;
   } | null>(null);
   const [iptvUrlSaveTimeout, setIptvUrlSaveTimeout] = useState<NodeJS.Timeout | null>(null);
   const [iptvTimeSaveTimeout, setIptvTimeSaveTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -71,14 +71,14 @@ export function SettingsPage({ onClose, onSettingsChange, onContentReload }: Set
 
   // Load IPTV cache info on mount and when IPTV is enabled
   useEffect(() => {
-    if (settings.iptvEnabled && window.electron?.isElectron) {
+    if (settings.iptvEnabled) {
       loadCacheInfo();
     }
   }, [settings.iptvEnabled]);
 
   // Also load cache info when the page first opens (for already-enabled IPTV)
   useEffect(() => {
-    if (settings.iptvEnabled && window.electron?.isElectron) {
+    if (settings.iptvEnabled) {
       loadCacheInfo();
     }
   }, []);
@@ -90,11 +90,11 @@ export function SettingsPage({ onClose, onSettingsChange, onContentReload }: Set
         setIptvCacheInfo({
           exists: info.exists || false,
           itemCount: info.itemCount,
-          jsonCacheSize: info.jsonCacheSize,
-          m3uCacheSize: info.m3uCacheSize,
-          jsonCachePath: info.jsonCachePath,
-          m3uCachePath: info.m3uCachePath,
+          storageSize: info.storageSize,
+          driver: info.driver,
+          driverName: info.driverName,
           lastModified: info.lastModified,
+          lastSync: info.lastSync,
         });
       } else if (info && !info.success) {
         console.error("Failed to get IPTV cache info:", info.error);
@@ -465,17 +465,16 @@ export function SettingsPage({ onClose, onSettingsChange, onContentReload }: Set
       <div className="absolute inset-0 bg-gradient-to-b from-zinc-900/20 to-black pointer-events-none" />
 
       {/* Content */}
-      <div className="relative pt-32 px-12 pb-24">
+      <div className="relative pt-18 md:pt-32 px-6 md:px-12 pb-6 md:pb-12">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="flex items-center justify-between mb-12">
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               {onClose && (
                 <Button
-                  variant="ghost"
-                  size="icon"
+                  variant="outline"
                   onClick={onClose}
-                  className="hover:bg-white/10"
+                  className="border-white/20 bg-white/5 hover:bg-white/10"
                 >
                   <ChevronLeft className="h-6 w-6" />
                 </Button>
@@ -489,7 +488,7 @@ export function SettingsPage({ onClose, onSettingsChange, onContentReload }: Set
                 className="border-white/20 bg-white/5 hover:bg-white/10"
               >
                 <RotateCcw className="h-4 w-4 mr-2" />
-                Reset to Defaults
+                Reset
               </Button>
               <Button
                 onClick={handleSave}
@@ -497,7 +496,7 @@ export function SettingsPage({ onClose, onSettingsChange, onContentReload }: Set
                 className="bg-[#E50914] hover:bg-[#E50914]/90 disabled:opacity-50"
               >
                 <Check className="h-4 w-4 mr-2" />
-                Save Changes
+                Save
               </Button>
             </div>
           </div>
@@ -708,7 +707,7 @@ export function SettingsPage({ onClose, onSettingsChange, onContentReload }: Set
                     <div className="p-4 border border-white/10 rounded-lg bg-white/5 space-y-3">
                       <div className="flex items-center gap-2 text-white/70 mb-2">
                         <HardDrive className="h-4 w-4" />
-                        <span className="text-sm font-medium">Cache Information</span>
+                        <span className="text-sm font-medium">Storage Information</span>
                       </div>
                       {iptvCacheInfo.exists ? (
                         <>
@@ -720,76 +719,38 @@ export function SettingsPage({ onClose, onSettingsChange, onContentReload }: Set
                               </p>
                             </div>
                             <div>
-                              <p className="text-white/50">JSON Cache Size</p>
+                              <p className="text-white/50">Storage Size</p>
                               <p className="text-white/90 font-medium">
-                                {iptvCacheInfo.jsonCacheSize
-                                  ? `${(iptvCacheInfo.jsonCacheSize / 1024 / 1024).toFixed(2)} MB`
+                                {iptvCacheInfo.storageSize
+                                  ? `${(iptvCacheInfo.storageSize / 1024 / 1024).toFixed(2)} MB`
                                   : "N/A"}
                               </p>
                             </div>
                             <div>
-                              <p className="text-white/50">M3U Cache Size</p>
+                              <p className="text-white/50">Storage Type</p>
                               <p className="text-white/90 font-medium">
-                                {iptvCacheInfo.m3uCacheSize
-                                  ? `${(iptvCacheInfo.m3uCacheSize / 1024 / 1024).toFixed(2)} MB`
-                                  : "N/A"}
+                                {iptvCacheInfo.driverName || "Unknown"}
                               </p>
                             </div>
                           </div>
-                          {(iptvCacheInfo.jsonCachePath || iptvCacheInfo.m3uCachePath) && (
-                            <div className="pt-2 border-t border-white/5 space-y-3">
-                              {iptvCacheInfo.jsonCachePath && (
-                                <div className="flex items-start gap-2">
-                                  <FolderOpen className="h-4 w-4 text-white/50 mt-0.5 flex-shrink-0" />
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-white/50 text-xs mb-1">JSON Cache Location</p>
-                                    <p className="text-white/70 text-xs font-mono break-all">
-                                      {iptvCacheInfo.jsonCachePath}
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
-                              {iptvCacheInfo.m3uCachePath && (
-                                <div className="flex items-start gap-2">
-                                  <FolderOpen className="h-4 w-4 text-white/50 mt-0.5 flex-shrink-0" />
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-white/50 text-xs mb-1">M3U Cache Location (Debug)</p>
-                                    <p className="text-white/70 text-xs font-mono break-all">
-                                      {iptvCacheInfo.m3uCachePath}
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
+                          {iptvCacheInfo.lastModified && (
+                            <div className="pt-2 border-t border-white/5">
+                              <p className="text-white/50 text-xs">Last Modified</p>
+                              <p className="text-white/70 text-sm">
+                                {new Date(iptvCacheInfo.lastModified).toLocaleString()}
+                              </p>
                             </div>
                           )}
                         </>
                       ) : (
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                           <p className="text-sm text-white/60">No cache found. Sync to create cache.</p>
-                          {(iptvCacheInfo.jsonCachePath || iptvCacheInfo.m3uCachePath) && (
-                            <div className="pt-2 border-t border-white/5 space-y-3">
-                              {iptvCacheInfo.jsonCachePath && (
-                                <div className="flex items-start gap-2">
-                                  <FolderOpen className="h-4 w-4 text-white/50 mt-0.5 flex-shrink-0" />
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-white/50 text-xs mb-1">JSON Cache Location (Will be created)</p>
-                                    <p className="text-white/70 text-xs font-mono break-all">
-                                      {iptvCacheInfo.jsonCachePath}
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
-                              {iptvCacheInfo.m3uCachePath && (
-                                <div className="flex items-start gap-2">
-                                  <FolderOpen className="h-4 w-4 text-white/50 mt-0.5 flex-shrink-0" />
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-white/50 text-xs mb-1">M3U Cache Location (Debug, will be created)</p>
-                                    <p className="text-white/70 text-xs font-mono break-all">
-                                      {iptvCacheInfo.m3uCachePath}
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
+                          {iptvCacheInfo.driverName && (
+                            <div className="pt-2 border-t border-white/5">
+                              <p className="text-white/50 text-xs">Storage Type (Ready)</p>
+                              <p className="text-white/70 text-sm">
+                                {iptvCacheInfo.driverName}
+                              </p>
                             </div>
                           )}
                         </div>
@@ -844,7 +805,7 @@ export function SettingsPage({ onClose, onSettingsChange, onContentReload }: Set
                     <Label htmlFor="plex-token">Plex Token</Label>
                     <Input
                       id="plex-token"
-                      type="password"
+                      type="text"
                       placeholder="xxxxxxxxxxxxxxxxxxxx"
                       value={settings.plexToken}
                       onChange={(e) => handlePlexTokenChange(e.target.value)}
@@ -996,7 +957,7 @@ export function SettingsPage({ onClose, onSettingsChange, onContentReload }: Set
                     <Label htmlFor="tmdb-token">API Read Access Token (v4)</Label>
                     <Input
                       id="tmdb-token"
-                      type="password"
+                      type="text"
                       placeholder="eyJhbGciOiJIUzI1NiJ9..."
                       value={settings.tmdbBearerToken}
                       onChange={(e) =>

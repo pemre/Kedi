@@ -48,9 +48,10 @@ export function MovieCard({ item, onDetailsClick, onPlay, onHover, variant = 'de
   return (
     <button
       className="
-        group relative isolate w-[150px] shrink-0 cursor-pointer rounded-md text-left text-sm transition-all duration-200
+        group relative isolate
+        w-[110px] md:w-[160px] lg:w-[180px]
+        shrink-0 cursor-pointer rounded-md text-left text-xs md:text-sm transition-all duration-200
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black
-        md:w-[160px] lg:w-[200px] data-[active=true]:ring-2 data-[active=true]:ring-white/60
         hover:ring-3 hover:ring-white/60
       "
       onMouseEnter={() => onHover?.(item)}

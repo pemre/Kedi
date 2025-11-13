@@ -125,7 +125,7 @@ export function HomePage({
         item={backgroundItem}
       />
       
-      <div className="relative z-10 mt-32 space-y-12 pb-12">
+      <div className="relative z-10 mt-18 md:mt-32 space-y-12 pb-12">
         {/* Continue Watching Row */}
         {watchHistory.length > 0 && (
           <ContentRow title="Continue Watching">
