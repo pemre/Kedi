@@ -1379,6 +1379,10 @@
     background-color: oklab(75.3609% .0341684 .151581 / .8);
   }
 
+  .bg-\[\#E85E00\] {
+    background-color: #e85e00;
+  }
+
   .bg-\[\#E50914\] {
     background-color: #e50914;
   }
@@ -2583,6 +2587,12 @@
   @media (hover: hover) {
     .hover\:border-white:hover {
       border-color: var(--color-white);
+    }
+  }
+
+  @media (hover: hover) {
+    .hover\:bg-\[\#E85E00\]\/80:hover {
+      background-color: oklab(65.0271% .135366 .131417 / .8);
     }
   }
 

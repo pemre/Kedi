@@ -324,23 +324,41 @@ export function ContentDetailsPage({
                         : seasonEpisode;
 
                       return (
-                        <Button
-                          onClick={() => onPlay(latestEpisode)}
-                          className="border-white/20 bg-[var(--netflix-red)] text-white backdrop-blur-sm hover:bg-[var(--netflix-red)]/80"
-                        >
-                          <Play className="h-5 w-5" />
-                          Play {label}
-                        </Button>
+                        <>
+                          <Button
+                            onClick={() => onPlay(latestEpisode)}
+                            className="border-white/20 bg-[var(--netflix-red)] text-white backdrop-blur-sm hover:bg-[var(--netflix-red)]/80"
+                          >
+                            <Play className="h-5 w-5" />
+                            Play {label}
+                          </Button>
+                          <Button
+                            onClick={() => window.location.href = `vlc://${latestEpisode.url}`}
+                            className="border-white/20 bg-[#E85E00] text-white backdrop-blur-sm hover:bg-[#E85E00]/80"
+                          >
+                            <Play className="h-5 w-5" />
+                            Play {label} (VLC)
+                          </Button>
+                        </>
                       );
                     })()
                   ) : (
-                    <Button
-                      onClick={() => onPlay(item)}
-                      className="border-white/20 bg-[var(--netflix-red)] text-white backdrop-blur-sm hover:bg-[var(--netflix-red)]/80"
-                    >
-                      <Play className="h-5 w-5" />
-                      Play Movie
-                    </Button>
+                    <>
+                      <Button
+                        onClick={() => onPlay(item)}
+                        className="border-white/20 bg-[var(--netflix-red)] text-white backdrop-blur-sm hover:bg-[var(--netflix-red)]/80"
+                      >
+                        <Play className="h-5 w-5" />
+                        Play Movie
+                      </Button>
+                      <Button
+                        onClick={() => window.location.href = `vlc://${item.url}`}
+                        className="border-white/20 bg-[#E85E00] text-white backdrop-blur-sm hover:bg-[#E85E00]/80"
+                      >
+                        <Play className="h-5 w-5" />
+                        Play Movie (VLC)
+                      </Button>
+                    </>
                   )}
 
                   {/* Add to My List Button */}
