@@ -220,14 +220,14 @@ export function ContentDetailsPage({
         ) : (
           <div className="relative space-y-12">
             {/* Content Header Info */}
-            <div className="grid gap-8 lg:grid-cols-[350px_1fr]">
+            <div className="grid gap-8 md:grid-cols-[350px_1fr]">
               {/* Poster */}
               {posterPath && (
-                <div className="flex justify-center">
+                <div className="flex justify-center lg:justify-start shrink-0">
                   <img
                     src={getTmdbImageUrl(posterPath, "w500") || ""}
                     alt={title}
-                    className="w-1/2 md:w-full max-w-[350px] rounded-lg shadow-2xl"
+                    className="w-[200px] md:w-[400px] h-auto object-cover rounded-lg shadow-2xl"
                   />
                 </div>
               )}
@@ -397,11 +397,11 @@ export function ContentDetailsPage({
                   )}
                 </div>
 
-                <div className="text-sm text-white/60">
+                <div className="text-sm text-white/60 break-all overflow-wrap-anywhere">
                     Download directly: <a
                         href={item.url}
                         download
-                        className="underline hover:text-white"
+                        className="underline hover:text-white break-all"
                     >
                         {item.url}
                     </a>
@@ -487,6 +487,38 @@ export function ContentDetailsPage({
                     ))}
                   </ContentRow>
                 ))}
+
+                {/* VLC Download Buttons Section */}
+                <div className="space-y-6 pt-8 border-t border-white/10">
+                  <h2 className="flex items-center gap-2 text-2xl md:text-3xl">
+                    <Download className="h-6 w-6 text-[#E85E00]" />
+                    Download Episodes (VLC)
+                  </h2>
+
+                  {sortedSeasons.map(({ season, episodes }) => (
+                    <div key={`vlc-${season}`} className="space-y-3">
+                      <h3 className="text-xl text-white/80">Season {season}</h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                        {episodes.map((episode) => {
+                          const episodeLabel = episode.episode
+                            ? `E${episode.episode.padStart(2, '0')}`
+                            : episode.name;
+
+                          return (
+                            <Button
+                              key={`vlc-${episode.id}`}
+                              onClick={() => window.location.href = `vlc://${episode.url}`}
+                              className="border-white/20 bg-[#E85E00]/20 text-white backdrop-blur-sm hover:bg-[#E85E00]/40 text-sm py-2 h-auto"
+                            >
+                              <Download className="h-4 w-4 mr-1" />
+                              {episodeLabel}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

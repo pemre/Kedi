@@ -814,6 +814,10 @@
     height: var(--radix-select-trigger-height);
   }
 
+  .h-auto {
+    height: auto;
+  }
+
   .h-fit {
     height: fit-content;
   }
@@ -848,10 +852,6 @@
 
   .w-1 {
     width: calc(var(--spacing) * 1);
-  }
-
-  .w-1\/2 {
-    width: 50%;
   }
 
   .w-3 {
@@ -922,6 +922,10 @@
     width: 150px;
   }
 
+  .w-\[200px\] {
+    width: 200px;
+  }
+
   .w-full {
     width: 100%;
   }
@@ -932,10 +936,6 @@
 
   .max-w-4xl {
     max-width: var(--container-4xl);
-  }
-
-  .max-w-\[350px\] {
-    max-width: 350px;
   }
 
   .max-w-md {
@@ -1381,6 +1381,10 @@
 
   .bg-\[\#E85E00\] {
     background-color: #e85e00;
+  }
+
+  .bg-\[\#E85E00\]\/20 {
+    background-color: oklab(65.0271% .135366 .131417 / .2);
   }
 
   .bg-\[\#E50914\] {
@@ -2043,8 +2047,16 @@
     font-weight: var(--font-weight-semibold);
   }
 
+  .break-all {
+    word-break: break-all;
+  }
+
   .whitespace-nowrap {
     white-space: nowrap;
+  }
+
+  .text-\[\#E85E00\] {
+    color: #e85e00;
   }
 
   .text-\[\#E50914\] {
@@ -2591,6 +2603,12 @@
   }
 
   @media (hover: hover) {
+    .hover\:bg-\[\#E85E00\]\/40:hover {
+      background-color: oklab(65.0271% .135366 .131417 / .4);
+    }
+  }
+
+  @media (hover: hover) {
     .hover\:bg-\[\#E85E00\]\/80:hover {
       background-color: oklab(65.0271% .135366 .131417 / .8);
     }
@@ -3131,6 +3149,12 @@
     background-color: var(--switch-background);
   }
 
+  @media (width >= 40rem) {
+    .sm\:grid-cols-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
   @media (width >= 48rem) {
     .md\:mt-32 {
       margin-top: calc(var(--spacing) * 32);
@@ -3222,14 +3246,20 @@
   }
 
   @media (width >= 48rem) {
-    .md\:w-full {
-      width: 100%;
+    .md\:w-\[400px\] {
+      width: 400px;
     }
   }
 
   @media (width >= 48rem) {
     .md\:grid-cols-4 {
       grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  @media (width >= 48rem) {
+    .md\:grid-cols-\[350px_1fr\] {
+      grid-template-columns: 350px 1fr;
     }
   }
 
@@ -3395,8 +3425,8 @@
   }
 
   @media (width >= 64rem) {
-    .lg\:grid-cols-\[350px_1fr\] {
-      grid-template-columns: 350px 1fr;
+    .lg\:justify-start {
+      justify-content: flex-start;
     }
   }
 
